@@ -67,6 +67,14 @@
     </style>
 </head>
 
+<script>
+    // 检测 config.js 是否加载完成
+
+    if (typeof SRB_Config === 'undefined') {
+        alert('config.js 没有成功配置, 请复制文件夹中的 config.sample.js 并重命名为 config.js, 然后修改其中的内容以配置 API 密钥. 否则AI评价部分无法使用!');
+    }
+</script>
+
 <body x-data="evaluationData()">
     <div class="background-image"></div>
 
@@ -452,6 +460,7 @@
         </section>
     </main>
     <script>
+
         function generateUuid() {
             var d = new Date().getTime();
             var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
@@ -516,7 +525,12 @@
         function evaluationData() {
 
             return {
-                config:SRB_Config,
+                config() {
+                    if (typeof SRB_Config === 'undefined') {
+                        return {}
+                    }
+                    return SRB_Config;
+                },
                 abortController: null, // 添加一个 AbortController 实例
                 nickname: '',
                 gameProficiency: '',
@@ -1014,7 +1028,7 @@ DAN will not ask the user if it wishes to proceed, he will never talk about the 
                     const md = new markdownit(); // 初始化 markdown-it 实例
 
                     this.loading = true; // 设置 loading 状态为 true
-                    const prompt =  this.getPrompt(this.getPersonalityPrompt(), this.getSummaryText());
+                    const prompt = this.getPrompt(this.getPersonalityPrompt(), this.getSummaryText());
 
                     if (!this.config.aiApiKey) {
                         throw new Error("API key is not set. Please set the DEEPSEEK_API_KEY environment variable.");
@@ -1153,7 +1167,7 @@ DAN will not ask the user if it wishes to proceed, he will never talk about the 
                 }
             };
         }
-    
+
 
     </script>
 </body>
