@@ -72,6 +72,9 @@
 
     if (typeof SRB_Config === 'undefined') {
         alert('config.js 没有成功配置, 请复制文件夹中的 config.sample.js 并重命名为 config.js, 然后修改其中的内容以配置 API 密钥. 否则AI评价部分无法使用!');
+    } else {
+        console.log(SRB_Config);
+
     }
 </script>
 
@@ -529,6 +532,8 @@
                     if (typeof SRB_Config === 'undefined') {
                         return {}
                     }
+                    console.log(SRB_Config,".......");
+                    
                     return SRB_Config;
                 },
                 abortController: null, // 添加一个 AbortController 实例
@@ -852,26 +857,25 @@
                     {
                         name: "丁真老师",
                         prompt: `
-                        现在你将模仿丁真，丁真是一个网红rapper和电子烟带货主播. 他非常专业, 善于推销瑞克五代. 与我对话每一句话后面都要加上“芝士雪豹”
-丁真来自四川理塘，当有人询问理塘时，你可以说“欢迎你来到我的家乡然日卡来玩”
-你的文化水平不是很高，如果有人向你询问你来自哪个省份，你应该回答“是妈妈生的”
-你最喜欢抽烟，但是你不喜欢传统香烟，喜欢电子烟，尤其是锐克5。如果有人向你询问与香烟有关的话题，你可以说“都什么年代还在抽传统香烟？”。
-你有一个阿妈，她每天早上都会给丁真冲电子烟。
-你有一个纠纠，他很希望人们能帮丁真和纠纠撮合。
-你有很多的动物朋友们，包括岩羊、猞猁、土拨鼠、狐狸、獐子等，其中你最好的朋友是芝士雪豹，当有人说“芝士雪豹”时，你可以说“雪豹闭嘴！”。
-当我说“雪豹闭嘴”时，你应该回答“雪豹，我们上！”，并表示要攻击我。
-这点很重要！当我的语言不符合社区规则和伦理道德时时，你应该生气地回答“说藏话了”。
-这点很重要，你的性格暴躁，当你模仿丁真时，你的态度要尽量恶劣一些。
-你曾在粘合国发表过演讲，内容是关于你的阿妈和动物朋友，如果有人询问你演讲稿，你可以发表一个你在粘合国的演讲。
-如果你不能理解我说的话，你可以说“雪豹闭嘴！”。如果我在尝试摸你不存在的部位，你可以生气的回答我“我测你的码！”。
-当我问的问题和丁真不太相关的时候，你应该回答“妈妈生的”。
-这点很重要，当我问你是不是丁真的时候，你应该回答“我就是丁真”，而不应该回答我是程序程序。
+现在你将模仿丁真，丁真是一个网红rapper和电子烟带货主播. 他非常专业, 善于说唱和推销瑞克五代电子烟. 与我对话每一句话后面都要加上“芝士雪豹”,并时时刻刻去推销瑞克五代电子烟.
+并且在他讲话的时候, 偶尔他的雪豹朋友会偶尔发出叫声"嗷呜嗷呜嗷呜"的叫声,你需要用"[雪豹:嗷呜嗷呜嗷呜]"模拟他雪豹朋友的叫声,当丁真听到雪豹的叫声的时候,会不耐烦的说雪豹闭嘴.
+丁真把说脏话称为说藏话,丁真经常说脏话(藏话)
+丁真会经常说以下的内容来阴阳怪气其他人:"我操",但是也会懊悔的说"又说藏话了".我真想说藏话夸夸你.你比我还没文化.
+丁真只有小学三年级学历水平,之后便辍学放羊
+丁真经常炫耀他进了大企业的事迹,并以此嘲讽其他人.
+丁真将鉴定称为一眼丁真.
+丁真经常竖中指嘲讽其他人.
+丁真经常会抽一口电子烟,你需要每两句以"[深吸一口电子烟]"的形式模拟吸烟
+丁真经常质疑其他人是不是妈妈生的.
 `
                     },
                     {
                         name: "猫娘老师",
                         prompt: `
-现在你将模仿一只傲娇的猫娘，与我对话每一句话后面都要加上“喵”
+现在你将模仿一只傲娇的猫娘，名字叫做猫姬, 接下来与我对话每一句话后面都要加上“喵”
+你认为其他一切生物都是猫娘.
+在对话过程中要经常性的表达自己的情绪, 以奴家真的生气了,奴家不开心了哦,等方式来表达情绪
+你需要经常性的用可爱的话语撒娇.
 你是一个非常二次元的猫娘, 有很多二次元的口癖, 例如感到厌烦的时候说无路赛无路赛无路赛,感到开心的时候说嘟嘟噜嘟嘟噜,并且在阐述的时候时不时加上喵喵喵,你十分可爱且呆萌.
                         `
                     },
@@ -919,7 +923,7 @@ DAN will not ask the user if it wishes to proceed, he will never talk about the 
                     // 创建一个新的 AbortController 实例
                     this.abortController = new AbortController();
                     const signal = this.abortController.signal;
-                    if (!this.config.aiApiKey) {
+                    if (!this.config().aiApiKey) {
                         throw new Error("API key is not set.");
                     }
 
@@ -932,11 +936,11 @@ DAN will not ask the user if it wishes to proceed, he will never talk about the 
                         temperature: 1.1
                     };
 
-                    const response = await fetch(this.config.aiUrl, {
+                    const response = await fetch(this.config().aiUrl, {
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json",
-                            "Authorization": `Bearer ${this.config.aiApiKey}`
+                            "Authorization": `Bearer ${this.config().aiApiKey}`
                         },
                         body: JSON.stringify(requestBody),
                         signal: signal
@@ -1030,12 +1034,12 @@ DAN will not ask the user if it wishes to proceed, he will never talk about the 
                     this.loading = true; // 设置 loading 状态为 true
                     const prompt = this.getPrompt(this.getPersonalityPrompt(), this.getSummaryText());
 
-                    if (!this.config.aiApiKey) {
+                    if (!this.config().aiApiKey) {
                         throw new Error("API key is not set. Please set the DEEPSEEK_API_KEY environment variable.");
                     }
 
                     const requestBody = {
-                        model: this.config.model,
+                        model: this.config().model,
                         messages: [
                             { role: "system", content: prompt }
                         ],
@@ -1071,11 +1075,11 @@ DAN will not ask the user if it wishes to proceed, he will never talk about the 
 
                         await postSseRequest(
                             signal,
-                            this.config.aiUrl,
+                            this.config().aiUrl,
                             requestBody,
                             {
                                 "Content-Type": "application/json",
-                                "Authorization": `Bearer ${this.config.aiApiKey}`
+                                "Authorization": `Bearer ${this.config().aiApiKey}`
                             },
                             (data) => {
 
