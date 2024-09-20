@@ -532,8 +532,8 @@
                     if (typeof SRB_Config === 'undefined') {
                         return {}
                     }
-                    console.log(SRB_Config,".......");
-                    
+                    console.log(SRB_Config, ".......");
+
                     return SRB_Config;
                 },
                 abortController: null, // 添加一个 AbortController 实例
@@ -1123,33 +1123,37 @@ DAN will not ask the user if it wishes to proceed, he will never talk about the 
                     }
                 },
                 getSummaryText() {
-                    return `
-                            昵称: ${this.nickname}
-                            熟练度: ${this.gameProficiency}
-                            糖度: ${this.sugarLevel}
-                            地图: ${this.map}
-                            枪法: ${this.ratings.gunSkill}
-                            意识: ${this.ratings.awareness}
-                            团队: ${this.ratings.teamwork}
-                            反应: ${this.ratings.reaction}
-                            定位: ${this.ratings.mousePrecision}
-                            枪法: ${this.ratings.recoilControl}
-                            预瞄: ${this.ratings.aiming}
-                            急停: ${this.ratings.stopping}
-                            道具: ${this.ratings.grenade}
-                            地图理解: ${this.ratings.mapUnderstanding}
-                            开局默认: ${this.ratings.initialDefault}
-                            中期决策: ${this.ratings.midGameDecision}
-                            残局处理: ${this.ratings.endGameHandling}
-                            经济管理: ${this.ratings.economyManage}
-                            心态与沟通: ${this.ratings.attitude}
-                            负面要素: ${this.negativeElements.join(', ')}
-                            正面要素: ${this.positiveElements.join(', ')}
-                            CT方评价: ${this.ctComments}
-                            T方评价: ${this.tComments}
-                            其他评价: ${this.additionalComments}
-                        `;
+                    // 基本信息部分
+                    let summary = `
+        昵称: ${this.nickname || ''}
+        熟练度: ${this.gameProficiency || ''}
+        糖度: ${this.sugarLevel || ''}
+        地图: ${this.map || ''}
+    `;
+
+                    // 动态遍历 ratings 对象中的所有属性
+                    if (this.ratings && typeof this.ratings === 'object') {
+                        for (const [key, value] of Object.entries(this.ratings)) {
+                            // 将驼峰命名转换为首字母大写的单词（例如 gunSkill -> Gun Skill）
+                            const formattedKey = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+                            summary += `
+        ${formattedKey}: ${value || ''}
+            `;
+                        }
+                    }
+
+                    // 其他评价部分
+                    summary += `
+        负面要素: ${this.negativeElements.join(', ') || ''}
+        正面要素: ${this.positiveElements.join(', ') || ''}
+        CT方评价: ${this.ctComments || ''}
+        T方评价: ${this.tComments || ''}
+        其他评价: ${this.additionalComments || ''}
+    `;
+
+                    return summary;
                 },
+
                 copyTextSummary() {
                     const summaryText = this.getSummaryText() + "\n\nAI评价:\n" + this.aiResponse;
                     navigator.clipboard.writeText(summaryText).then(() => {
