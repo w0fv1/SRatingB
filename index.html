@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>直播辅助系统</title>
+    <!-- 引入Bootstrap CSS -->
+    <link href="./css/bootstrap.min.css" rel="stylesheet">
+    <!-- 引入Alpine.js -->
+    <script src="./js/alpine.min.js" defer></script>
+    <!-- 引入Bootstrap JS -->
+    <script src="./js/bootstrap.min.js"></script>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="mb-4">直播辅助系统</h1>
+        <button type="button" class="btn btn-primary me-2" onclick="openSpeechTest()">打开 SpeechTest</button>
+        <button type="button" class="btn btn-secondary" onclick="openSRatingB()">打开 SRatingB</button>
+    </div>
+
+    <script>
+        function openSpeechTest() {
+            window.open('http://localhost:9080/SpeechTest.html', '_blank');
+        }
+
+        function openSRatingB() {
+            window.open('http://localhost:9080/SRatingB.html', '_blank');
+        }
+    </script>
+</body>
+</html>

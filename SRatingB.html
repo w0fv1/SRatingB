@@ -486,9 +486,9 @@
             return {
                 config() {
                     if (typeof SRB_Config === 'undefined') {
+                        console.log("config未定义");
                         return {}
                     }
-                    console.log(SRB_Config, ".......");
 
                     return SRB_Config;
                 },
