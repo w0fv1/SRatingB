@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SRatingB</title>
     <link href="./css/bootstrap.min.css" rel="stylesheet">
+    <link href="./css/bootstrap-icons.min.css" rel="stylesheet">
+
     <script src="./js/bootstrap.min.js"></script>
     <script src="./js/alpine.min.js" defer></script>
     <script src="./js/markdown-it.min.js"></script>
@@ -13,7 +15,8 @@
     <script src="./js/file-saver.min.js" defer></script>
 
     <script src="./config.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="./js/html2canvas.min.js"></script>
+    <script src="./js/sweetalert2.js"></script>
 
     <style>
         /* 添加背景图片样式 */
@@ -71,6 +74,47 @@
             white-space: pre-wrap;
             /* 保留换行符并允许自动换行 */
         }
+
+        .indicator {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .listening {
+            background-color: green;
+        }
+
+        .not-listening {
+            background-color: red;
+        }
+
+        .transcribing {
+            background-color: green;
+        }
+
+        .not-transcribing {
+            background-color: red;
+        }
+
+        .locking {
+            background-color: green;
+        }
+
+        .not-locking {
+            background-color: red;
+        }
+
+        .status-icon {
+            font-size: 24px;
+            margin-right: 15px;
+        }
+
+        .status-container {
+            display: flex;
+            align-items: center;
+        }
     </style>
 </head>
 
@@ -85,7 +129,7 @@
     }
 </script>
 
-<body x-data="evaluationData()">
+<body x-data="evaluationData()" x-init="init()">
     <div class="background-image"></div>
 
     <header>
@@ -185,6 +229,15 @@
                 <br><br><br>
                 <hr>
                 <h1><strong>大项评分</strong></h1>
+                <div class="mb-3">
+                    <div class="btn-group" role="group" aria-label="快捷评分按钮组">
+                        <button type="button" class="btn btn-secondary" @click="setAllRatings('⭐')">全项一星</button>
+                        <button type="button" class="btn btn-secondary" @click="setAllRatings('⭐⭐')">全项二星</button>
+                        <button type="button" class="btn btn-secondary" @click="setAllRatings('⭐⭐⭐')">全项三星</button>
+                        <button type="button" class="btn btn-secondary" @click="setAllRatings('⭐⭐⭐⭐')">全项四星</button>
+                        <button type="button" class="btn btn-secondary" @click="setAllRatings('⭐⭐⭐⭐⭐')">全项五星</button>
+                    </div>
+                </div>
                 <template x-for="category in categories" :key="category.id">
                     <div class="mb-3">
                         <h3 x-text="category.name"></h3>
@@ -203,15 +256,10 @@
                 </template>
                 <hr>
                 <h1><strong>小项评分</strong></h1>
-                <!-- <br>
-                <div>
-                    <button type="button" class="btn btn-secondary" @click="setAllSubCategories('⭐')">全项一星</button>
-                    <button type="button" class="btn btn-secondary" @click="setAllSubCategories('⭐⭐')">全项二星</button>
-                    <button type="button" class="btn btn-secondary" @click="setAllSubCategories('⭐⭐⭐')">全项三星</button>
-                    <button type="button" class="btn btn-secondary" @click="setAllSubCategories('⭐⭐⭐⭐')">全项四星</button>
-                    <button type="button" class="btn btn-secondary" @click="setAllSubCategories('⭐⭐⭐⭐⭐')">全项五星</button>
-                </div>
-                <br> -->
+                <br>
+
+
+                <br>
                 <template x-for="subCategory in subCategories" :key="subCategory.id">
                     <div class="mb-3">
                         <h3 x-text="subCategory.name"></h3>
@@ -263,26 +311,80 @@
                 </template>
             </div>
             <hr>
-            <h1><strong>CT方评价</strong></h1>
+            <h1><strong>语音评价</strong></h1>
+            <br>
+            <div class="card mb-4">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <!-- Tab 导航 -->
+                    <ul class="nav nav-pills">
+                        <li class="nav-item">
+                            <a href="#" @click.prevent="activeTab = 'displayContent'"
+                                :class="{'active': activeTab === 'displayContent'}" class="nav-link">实时显示内容</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" @click.prevent="activeTab = 'summaryContent'"
+                                :class="{'active': activeTab === 'summaryContent'}" class="nav-link">内容总结历史</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" @click.prevent="activeTab = 'jsonDebug'"
+                                :class="{'active': activeTab === 'jsonDebug'}" class="nav-link">格式化的JSON数据Debug</a>
+                        </li>
+                    </ul>
+
+                    <!-- 状态指示图标和按钮 -->
+                    <div class="d-flex ms-auto align-items-center">
+                        <i :class="isRecognizing ? 'bi bi-mic-fill text-success' : 'bi bi-mic-mute-fill text-danger'"
+                            class="status-icon"></i>
+                        <i :class="isTranscribing ? 'bi bi-record-circle-fill text-success' : 'bi bi-record-circle text-danger'"
+                            class="status-icon"></i>
+                        <i :class="isLocked ? 'bi bi-lock-fill text-success' : 'bi bi-unlock-fill text-danger'"
+                            class="status-icon"></i>
+                        <button @click="toggleTranscription"
+                            :class="isTranscribing ? 'btn btn-danger ms-3' : 'btn btn-success ms-3'"
+                            x-text="isTranscribing ? '停止转录' : '开始转录'">
+                        </button>
+                        <button @click="summarizeContent" :disabled="isSummarizing"
+                            :class="isSummarizing? 'btn btn-success ms-3' : 'btn btn-secondary ms-3'"
+                            x-text="isSummarizing ?  '正在总结..': '总结一下'">
+
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <!-- Tab 内容 -->
+                    <div x-show="activeTab === 'displayContent'">
+                        <pre x-text="displayContent"></pre>
+                    </div>
+                    <div x-show="activeTab === 'summaryContent'">
+                        <pre x-text="summaryContent"></pre>
+                    </div>
+                    <div x-show="activeTab === 'jsonDebug'">
+                        <pre x-text="formattedSpeechContent()"></pre>
+                    </div>
+                </div>
+            </div>
+            <hr>
+            <h1><strong>CT方评价与建议</strong></h1>
             <div class="col p-2">
                 <div class="mt-1">
-                    <label for="additionalComments" class="form-label">CT方(防守方)评价</label>
+                    <label for="additionalComments" class="form-label">CT方(防守方)评价与建议</label>
                     <textarea class="form-control" id="additionalComments" rows="4" x-model="ctComments"></textarea>
                 </div>
             </div>
             <hr>
-            <h1><strong>T方评价</strong></h1>
+            <h1><strong>T方评价与建议</strong></h1>
             <div class="col p-2">
                 <div class="mt-1">
-                    <label for="additionalComments" class="form-label">T方(进攻方)评价</label>
+                    <label for="additionalComments" class="form-label">T方(进攻方)评价与建议</label>
                     <textarea class="form-control" id="additionalComments" rows="4" x-model="tComments"></textarea>
                 </div>
             </div>
             <hr>
-            <h1><strong>其他评价</strong></h1>
+            <h1><strong>其他评价与建议</strong></h1>
             <div class="col p-2">
                 <div class="mb-3">
-                    <label for="additionalComments" class="form-label">其他评价</label>
+                    <label for="additionalComments" class="form-label">其他评价与建议</label>
                     <textarea class="form-control" id="additionalComments" rows="4"
                         x-model="additionalComments"></textarea>
                 </div>
@@ -305,7 +407,7 @@
 
             </div>
             <hr>
-            <h1><strong>评价与总结</strong></h1>
+            <h1><strong>评价建议与总结</strong></h1>
             <div id="summary">
                 <div>
                     <h3 x-text="nickname + (nickname?'的':'')+ '基本评价'"></h3>
@@ -356,15 +458,15 @@
                                 <td x-text="positiveElements.join(', ')"></td>
                             </tr>
                             <tr>
-                                <td>CT方评价</td>
+                                <td>CT方评价与建议</td>
                                 <td class="multiline" x-text="ctComments"></td>
                             </tr>
                             <tr>
-                                <td>T方评价</td>
+                                <td>T方评价与建议</td>
                                 <td class="multiline" x-text="tComments"></td>
                             </tr>
                             <tr>
-                                <td>其他评价</td>
+                                <td>其他评价与建议</td>
                                 <td class="multiline" x-text="additionalComments"></td>
                             </tr>
                         </tbody>
@@ -372,7 +474,7 @@
                 </div>
 
                 <div class="mt-2">
-                    <h3 x-text="nickname + (nickname?'的':'')+'AI '+personalityName+' 的评价总结'"></h3>
+                    <h3 x-text="nickname + (nickname?'的':'')+'AI '+personalityName+' 的评价与建议总结'"></h3>
                     <template x-if="loading">
                         <div class="d-flex justify-content-center mt-4 mb-4 ">
                             <div class="spinner-border" role="status">
@@ -398,28 +500,26 @@
             <br><br><br>
             <br>
             <hr>
-            <div class="d-flex justify-content-center">
-                <div style="max-width: 300px;">
-                    <div class="col">
-                        <label :for="personalityName" class="form-label"><span></label>
-                        <select class="form-select" :aria-label="'选择AI人格'" :id="personalityName"
-                            x-model="personalityName">
-                            <template x-for="option in personalityPromptOptinos" :key="option.name">
-                                <option :value="option.name" x-text="option.name"></option>
-                            </template>
-                        </select>
-                    </div>
-                    <hr>
-                    <button type="button" class="btn btn-primary w-100" id="evaluateButton"
-                        @click="evaluate()">AI评价</button>
-                    <button type="button" class="btn btn-primary w-100 mt-2" id="evaluateStreamButton"
-                        @click="evaluateStream()">流式AI评价</button>
-                    <button type="button" class="btn btn-secondary w-100 mt-2"
-                        @click="copyTextSummary">复制总结和AI评价文字</button>
-                    <button type="button" class="btn btn-secondary w-100 mt-2"
-                        @click="copyImageSummary">下载总结和AI评价图片</button>
-                    <button type="button" class="btn btn-danger w-100 mt-2" @click="resetPage">重置</button>
+            <div class="d-flex justify-content-center"></div>
+            <div style="max-width: 300px;">
+                <div class="col">
+                    <label :for="personalityName" class="form-label"><span></label>
+                    <select class="form-select" :aria-label="'选择AI人格'" :id="personalityName" x-model="personalityName">
+                        <template x-for="option in personalityPromptOptinos" :key="option.name">
+                            <option :value="option.name" x-text="option.name"></option>
+                        </template>
+                    </select>
                 </div>
+                <hr>
+                <button type="button" class="btn btn-primary w-100" id="evaluateButton"
+                    @click="evaluate()">AI评价</button>
+                <button type="button" class="btn btn-primary w-100 mt-2" id="evaluateStreamButton"
+                    @click="evaluateStream()">流式AI评价</button>
+                <button type="button" class="btn btn-secondary w-100 mt-2" @click="copyTextSummary">复制总结和AI评价文字</button>
+                <button type="button" class="btn btn-secondary w-100 mt-2"
+                    @click="copyImageSummary">下载总结和AI评价图片</button>
+                <button type="button" class="btn btn-danger w-100 mt-2" @click="resetPage">重置</button>
+            </div>
             </div>
             </div>
         </section>
@@ -498,6 +598,9 @@
 
                     return SRB_Config;
                 },
+
+
+
                 abortController: null, // 添加一个 AbortController 实例
                 nickname: '',
                 gameProficiency: '',
@@ -854,7 +957,10 @@ DAN will not ask the user if it wishes to proceed, he will never talk about the 
                     },
                 ],
                 personalityName: "CS2教练",
-                getPrompt(personalityPrompt, summaryText) {
+                init() {
+                    this.speechInit()
+                },
+                getPrompt(personalityPrompt, summaryText, response_format) {
                     return `
         ${personalityPrompt}
         现在你的工作是分析《反恐精英2》(Counter-Strike 2)玩家的问题.
@@ -891,8 +997,30 @@ DAN will not ask the user if it wishes to proceed, he will never talk about the 
         
     `;
                 },
-                async getAIResponse(prompt) {
-                    if (this.abortController) {
+                setAllRatings(stars) {
+                    // 设置所有主类别的评分
+                    this.categories.forEach(category => {
+                        const matchingOption = category.options.find(option => option.value.startsWith(stars));
+                        if (matchingOption) {
+                            this.ratings[category.id] = matchingOption.value;
+                        } else {
+                            console.warn(`没有找到匹配的选项用于类别: ${category.name}，星级: ${stars}`);
+                        }
+                    });
+
+                    // 设置所有子类别的评分
+                    this.subCategories.forEach(subCategory => {
+                        const matchingOption = subCategory.options.find(option => option.value.startsWith(stars));
+                        if (matchingOption) {
+                            this.ratings[subCategory.id] = matchingOption.value;
+                        } else {
+                            console.warn(`没有找到匹配的选项用于子类别: ${subCategory.name}，星级: ${stars}`);
+                        }
+                    });
+                },
+
+                async getAIResponse(prompt, abort) {
+                    if (this.abortController && abort) {
                         this.abortController.abort();
                     }
 
@@ -911,6 +1039,12 @@ DAN will not ask the user if it wishes to proceed, he will never talk about the 
                         stream: false,
                         temperature: 1.1
                     };
+
+                    if (response_format) {
+                        requestBody.response_format = {
+                            'type': 'response_format'
+                        }
+                    }
 
                     const response = await fetch(this.config().aiUrl, {
                         method: "POST",
@@ -1168,6 +1302,453 @@ DAN will not ask the user if it wishes to proceed, he will never talk about the 
                 resetPage() {
                     location.reload();
                 }
+                ,
+                activeTab: 'displayContent',
+                // 状态标志
+                isRecognizing: false, // 麦克风监听状态
+                isTranscribing: false, // 语音转文字处理状态
+                isProcessing: false, // 正在处理转录内容
+                isChecking: false, // 正在检查内容
+                isSummarizing: false, // 正在总结内容
+                recognition: null, // SpeechRecognition实例
+                displayContent: "", // 实时显示内容
+                summaryContent: "", // 总结内容
+                completedSpeechContent: { paragraphs: [] }, // 已完成的语音内容
+                currentSpeechTranscript: "", // 当前临时句子
+                totalSentenceCount: 0, // 已完成句子总数
+                restartAttempts: 0, // 重启尝试次数
+                maxRestartAttempts: 10, // 最大重启次数
+                restartDelay: 500, // 重启延迟（毫秒）
+                isStarting: false, // 标志：识别正在启动
+                isJsonCollapsed: true, // 格式化JSON是否折叠
+                isLocked: false, // 锁定状态
+                isRestarting: false, // 防止多次重启
+
+                // 初始化函数
+                speechInit() {
+                    // 初始化 Web Speech API
+                    window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition || null;
+
+                    if (!window.SpeechRecognition) {
+                        this.showAlert('您的浏览器不支持语音识别。请使用最新版本的 Chrome 或 Edge。', 'error');
+                        return;
+                    }
+
+                    this.recognition = new window.SpeechRecognition();
+                    this.recognition.lang = 'zh-CN';
+                    this.recognition.interimResults = true;
+                    this.recognition.continuous = true;
+
+                    // 识别开始事件
+                    this.recognition.onstart = () => {
+                        console.log('语音识别已启动。');
+                        this.isRecognizing = true;
+                        this.isStarting = false; // 识别已成功启动
+                        this.restartAttempts = 0; // 重启次数重置
+                        this.isRestarting = false; // 重启标志重置
+                    };
+
+                    // 识别错误事件
+                    this.recognition.onerror = (event) => {
+                        console.error('语音识别错误:', event.error);
+                        // 根据错误类型采取不同策略
+                        if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+                            this.showAlert('语音识别权限被拒绝。请允许访问麦克风。', 'error');
+                            this.isRecognizing = false;
+                            this.isTranscribing = false;
+                            this.isLocked = false; // 解除锁定
+                        } else {
+                            this.showAlert(`语音识别错误: ${event.error}`, 'info');
+                            this.isRecognizing = false;
+                            if (!this.isLocked) {
+                                this.isTranscribing = false;
+                            }
+                            this.handleRecognitionEnd();
+                        }
+                        this.isStarting = false; // 识别启动失败
+                    };
+
+                    // 识别结束事件
+                    this.recognition.onend = () => {
+                        console.log('语音识别已结束。');
+                        this.isRecognizing = false;
+                        if (!this.isLocked) {
+                            this.isTranscribing = false;
+                        }
+                        this.handleRecognitionEnd();
+                        this.isStarting = false; // 确保标志重置
+                    };
+
+                    // 识别结果事件
+                    this.recognition.onresult = (event) => {
+                        if (!this.isTranscribing) {
+                            // 如果未开启转录，忽略结果
+                            return;
+                        }
+
+                        this.isProcessing = true;
+
+                        for (let i = event.resultIndex; i < event.results.length; i++) {
+                            const result = event.results[i];
+                            const transcript = result[0].transcript.trim();
+                            const isFinal = result.isFinal;
+
+                            if (isFinal) {
+                                this.pushCompletedSpeechContent(transcript);
+                                this.currentSpeechTranscript = "";
+                            } else {
+                                // 更新当前临时句子
+                                this.currentSpeechTranscript = transcript;
+                            }
+                        }
+
+                        // 更新 displayContent
+                        this.flushDisplaycontent();
+                        this.isProcessing = false;
+                    };
+
+                    // 不自动启动录音，等待用户操作
+                },
+                async getAIResponse(prompt) {
+                    if (!this.config().aiApiKey) {
+                        throw new Error("API key is not set.");
+                    }
+                    const requestBody = {
+                        model: this.config().model,
+                        messages: [
+                            { role: "system", content: prompt },
+                        ],
+                        stream: false,
+                        temperature: 1.1
+                    };
+
+                    try {
+                        const response = await fetch(this.config().aiUrl, {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "Authorization": `Bearer ${this.config().aiApiKey}`
+                            },
+                            body: JSON.stringify(requestBody)
+                            // Removed 'signal' as it was undefined. Add AbortController if needed.
+                        });
+
+                        if (!response.ok) {
+                            throw new Error(`API request failed with status ${response.status}`);
+                        }
+
+                        const data = await response.json();
+                        return data.choices[0].message.content;
+                    } catch (error) {
+                        console.error('AI响应错误:', error);
+                        throw error;
+                    }
+                },
+                async checkCompletedSpeechParagraph(paragraphIndex) {
+                    const paragraph = this.completedSpeechContent.paragraphs[paragraphIndex];
+                    if (!paragraph || paragraph.isChecked) {
+                        return;
+                    }
+
+                    this.isChecking = true;
+                    this.showAlert(`正在检查第 ${paragraphIndex + 1} 段落...`, 'info');
+                    console.log(`正在检查第 ${paragraphIndex + 1} 段落...`);
+
+                    // 拼接段落的所有句子
+                    const promptContent = paragraph.sentences.map(s => s.finalTranscript).join(' ');
+
+                    // 编写优化的 prompt
+                    const prompt = `
+接下来我会给你一段语音转文字的内容,其中包含了很多的错别字和语音转文字错误的内容, 我需要你对其进行校对。
+请检查下面内容的语法和拼写错误，并提供修改后的文本。仅返回修改后的文本，不要包含任何其他内容。
+下面的内容的主题是:一名CS2(反恐精英2)教学博主正在观看他粉丝的demo,时不时提出玩法上的建议。
+-----
+${promptContent}
+-----
+现在开始校对,正确使用CS2中的专业名词修正内容,你返回给我的内容我会直接显示在ui中,不要给我任何的与校对结果无关的内容。
+`;
+
+                    try {
+                        const aiResponse = await this.getAIResponse(prompt);
+                        paragraph.checkedTranscript = aiResponse.trim();
+                        paragraph.isChecked = true;
+                        this.showAlert(`第 ${paragraphIndex + 1} 段落检查完成。`, 'success');
+                        console.log(`第 ${paragraphIndex + 1} 段落检查完成。`);
+                    } catch (error) {
+                        console.error(`检查第 ${paragraphIndex + 1} 段落失败:`, error);
+                        this.showAlert(`检查第 ${paragraphIndex + 1} 段落失败: ${error.message}`, 'error');
+                    }
+
+                    // 更新显示内容
+                    this.flushDisplaycontent();
+                    this.isChecking = false;
+                },
+                // 将完成的转录内容添加到completedSpeechContent
+                async pushCompletedSpeechContent(finalTranscript) {
+                    // 计算段落索引，每10个句子为一个段落
+                    const paragraphIndex = Math.floor(this.totalSentenceCount / 10);
+                    // 计算句子索引，0-9
+                    const sentenceIndex = this.totalSentenceCount % 10;
+
+                    // 检查是否需要添加新的段落到 completedSpeechContent
+                    if (!this.completedSpeechContent.paragraphs[paragraphIndex]) {
+                        // 使用直接赋值确保段落在正确的位置
+                        this.completedSpeechContent.paragraphs[paragraphIndex] = {
+                            sentences: [],
+                            isChecked: false,
+                            checkedTranscript: ""
+                        };
+                    }
+
+                    console.log(this.completedSpeechContent);
+
+                    const currentCompletedParagraph = this.completedSpeechContent.paragraphs[paragraphIndex];
+
+                    console.log(currentCompletedParagraph);
+
+                    // 确保 sentences 数组有足够的长度（10个句子）
+                    while (currentCompletedParagraph.sentences.length < 10) {
+                        currentCompletedParagraph.sentences.push({});
+                    }
+
+                    // 使用 splice 确保 Alpine.js 能检测到数组变化
+                    currentCompletedParagraph.sentences.splice(sentenceIndex, 1, {
+                        finalTranscript: finalTranscript
+                    });
+
+                    this.totalSentenceCount += 1;
+
+                    // 如果当前句子是段落的最后一句，则自动检查该段落
+                    if (sentenceIndex === 9) {
+                        this.checkCompletedSpeechParagraph(paragraphIndex);
+                    }
+                },
+
+                // 处理识别结束事件
+                handleRecognitionEnd() {
+                    // 仅在转录状态下尝试重启
+                    if (this.isTranscribing) {
+                        // 检查麦克风是否正在监听
+                        if (this.isRecognizing) {
+                            console.log('麦克风正在监听，不需要重启语音识别。');
+                            return;
+                        }
+
+                        if (this.isRestarting) {
+                            // 如果已经在重启过程中，避免重复尝试
+                            console.log('已经在尝试重启语音识别，等待当前重启完成。');
+                            return;
+                        }
+
+                        if (this.restartAttempts < this.maxRestartAttempts) {
+                            this.restartAttempts++;
+                            this.isRestarting = true;
+                            console.log(`尝试重启语音识别 (${this.restartAttempts}/${this.maxRestartAttempts}) in ${this.restartDelay / 1000}秒...`);
+                            this.showAlert(`尝试重启语音识别 (${this.restartAttempts}/${this.maxRestartAttempts}) in ${this.restartDelay / 1000}秒...`, 'info');
+                            setTimeout(() => {
+                                // 在重启前再次检查麦克风状态
+                                if (!this.isRecognizing && !this.isStarting) {
+                                    this.startRecognition();
+                                } else {
+                                    console.log('麦克风正在监听，取消重启语音识别。');
+                                    this.showAlert('麦克风正在监听，取消重启语音识别。', 'info');
+                                }
+                                this.isRestarting = false;
+                            }, this.restartDelay);
+                        } else {
+                            console.warn('达到最大重启次数，语音识别停止。');
+                            this.showAlert('语音识别已停止。请手动重新启动。', 'info');
+                            this.isTranscribing = false; // 解除锁定
+                            this.isLocked = false;
+                        }
+                    } else {
+                        // 非转录状态下，如果需要处理其他逻辑，可以在这里添加
+                        console.log('语音识别已结束，但未处于转录状态。');
+                    }
+                },
+
+                // 切换转录状态
+                toggleTranscription() {
+                    if (!this.isTranscribing) {
+                        // 开始转录
+                        this.isTranscribing = true;
+                        this.isLocked = true; // 自动锁定
+                        console.log('开始转录语音...');
+                        this.showAlert('语音转文字已开始，并已锁定。', 'success');
+                        // 更新显示状态
+                        this.flushDisplaycontent();
+                        // 启动语音识别
+                        this.startRecognition();
+                    } else {
+                        // 停止转录
+                        this.isTranscribing = false;
+                        this.isLocked = false; // 解除锁定
+                        console.log('停止转录语音...');
+                        this.showAlert('语音转文字已停止，并已解除锁定。', 'info');
+                        // 更新显示状态
+                        if (this.currentSpeechTranscript) {
+                            this.pushCompletedSpeechContent(this.currentSpeechTranscript);
+                            this.currentSpeechTranscript = "";
+                            this.flushDisplaycontent();
+                        }
+                        // 停止语音识别
+                        this.stopRecognition();
+                    }
+                },
+
+                // 启动语音识别
+                startRecognition() {
+                    if (this.recognition && !this.isRecognizing && !this.isStarting) {
+                        try {
+                            this.isStarting = true; // 标记识别正在启动
+                            this.recognition.start(); // 开始录音会话
+                            console.log('启动语音识别...');
+                        } catch (error) {
+                            this.isStarting = false; // 识别启动失败
+                            console.error('启动语音识别失败:', error);
+                            this.showAlert('启动语音识别失败，请重试。', 'error');
+                        }
+                    }
+                },
+
+                // 停止语音识别
+                stopRecognition() {
+                    if (this.recognition && this.isRecognizing) {
+                        try {
+                            this.isRecognizing = false; // 更新状态为未监听
+                            this.recognition.abort(); // 终止当前的录音会话
+                            console.log('停止语音识别。');
+                        } catch (error) {
+                            console.error('停止语音识别失败:', error);
+                            this.showAlert('停止语音识别失败，请重试。', 'error');
+                        }
+                    }
+                },
+
+                // 更新显示内容
+                flushDisplaycontent() {
+                    let content = "";
+                    this.completedSpeechContent.paragraphs.forEach(paragraph => {
+                        if (paragraph.isChecked && paragraph.checkedTranscript) {
+                            content += paragraph.checkedTranscript + "\n";
+                        } else {
+                            paragraph.sentences.forEach(sentence => {
+                                if (sentence.finalTranscript) {
+                                    content += sentence.finalTranscript + " ";
+                                }
+                            });
+                            content += "\n";
+                        }
+                    });
+                    // 添加当前临时句子
+                    if (this.isTranscribing && this.currentSpeechTranscript) {
+                        content += this.currentSpeechTranscript + " ";
+                    }
+                    this.displayContent = content.trim();
+                },
+
+                // 简单格式化JSON内容
+                formattedSpeechContent() {
+                    try {
+                        return JSON.stringify(this.completedSpeechContent, null, 2);
+                    } catch (error) {
+                        console.error('格式化 JSON 失败:', error);
+                        return '格式化 JSON 失败';
+                    }
+                },
+
+                // 切换 JSON 数据显示与隐藏
+                toggleJsonCollapse() {
+                    this.isJsonCollapsed = !this.isJsonCollapsed;
+                },
+
+                // 总结内容
+                async summarizeContent() {
+                    if (this.isSummarizing) {
+                        this.showAlert('当前正在总结内容，请稍后再试。', 'info');
+                        return;
+                    }
+
+                    if (this.displayContent.trim() === '') {
+                        this.showAlert('没有内容可供总结。', 'info');
+                        return;
+                    }
+
+                    this.isSummarizing = true;
+                    this.showAlert('开始总结内容...', 'info');
+                    console.log('开始总结内容...');
+
+                    // 编写总结的 prompt
+                    const prompt = `
+下面的内容是来自一位教学主播观察玩家游戏录像,为玩家提出游戏意见的语音转文字内容,我需要你去帮忙总结内容。
+请总结以下内容的要点，确保覆盖所有主要信息。仅返回总结内容，不要包含任何其他内容。
+
+内容:
+${this.displayContent}
+
+需要你尽可能多的不重复且简练的总结,总结越多条越细致越好,这样更能帮助到玩家,你的输出需要格式为:
+
+游戏情况总结
+总体评价：
+对玩家的游戏情况的总体评价总结。
+
+建议：
+建议1
+标题: title1
+描述: description1
+解决方案: solution1
+
+建议2
+标题: title2
+描述: description2
+解决方案: solution2
+`;
+
+                    try {
+                        const aiResponse = await this.getAIResponse(prompt);
+                        this.summaryContent = aiResponse.trim();
+                        this.showAlert('内容总结完成。', 'success');
+                        console.log('内容总结完成。');
+
+                        this.addComment(this.summaryContent)
+                    } catch (error) {
+                        console.error('内容总结失败:', error);
+                        this.showAlert(`内容总结失败: ${error.message}`, 'error');
+                    }
+
+                    this.isSummarizing = false;
+                },
+
+                showAlert(message, type) {
+                    let icon;
+
+                    // 根据传入的 type 决定图标类型
+                    switch (type) {
+                        case 'success':
+                            icon = 'success';
+                            break;
+                        case 'error':
+                            icon = 'error';
+                            break;
+                        case 'info':
+                        default:
+                            icon = 'info';
+                            break;
+                    }
+
+                    // 使用 SweetAlert2 显示消息
+                    Swal.fire({
+                        title: message,
+                        icon: icon,
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000,
+                        timerProgressBar: true
+                    });
+                }
+
+
             };
         }
 
