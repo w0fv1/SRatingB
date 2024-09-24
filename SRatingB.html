@@ -222,7 +222,41 @@
     }
 </script>
 
+
+
 <body x-data="evaluationData()" x-init="init()">
+
+    <!-- 初始玩家信息模态框 -->
+    <div class="modal fade" id="initialModal" tabindex="-1" aria-labelledby="initialModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="initialModalLabel">请输入玩家信息</h1>
+                </div>
+                <div class="modal-body">
+                    <form id="initialForm">
+                        <div class="mb-3">
+                            <label for="modalNickname" class="form-label">玩家的游戏昵称</label>
+                            <input type="text" class="form-control" id="modalNickname" x-model="nickname" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="modalMap" class="form-label">选择游戏地图</label>
+                            <select class="form-select" id="modalMap" x-model="map" required>
+                                <option value="" disabled selected>选择地图</option>
+                                <template x-for="option in mapOptions" :key="option.value">
+                                    <option :value="option.value" x-text="option.value"></option>
+                                </template>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" @click="submitInitialForm()">确认</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="background-image"></div>
 
     <header>
@@ -1071,8 +1105,17 @@ DAN will not ask the user if it wishes to proceed, he will never talk about the 
                     },
                 ],
                 personalityName: "CS2教练",
+                initialModalInstance: null, // 新增：存储模态框实例
+
                 init() {
-                    this.speechInit()
+                    this.speechInit();
+                    // 页面加载时显示初始模态框
+                    this.initialModalInstance = new bootstrap.Modal(document.getElementById('initialModal'));
+
+                    // 页面加载时显示初始模态框
+                    document.addEventListener('DOMContentLoaded', () => {
+                        this.initialModalInstance.show();
+                    });
                 },
                 getPrompt(personalityPrompt, summaryText, response_format) {
                     return `
@@ -1132,7 +1175,21 @@ DAN will not ask the user if it wishes to proceed, he will never talk about the 
                         }
                     });
                 },
+                // 新增方法：提交初始表单
+                submitInitialForm() {
+                    // 验证输入
+                    if (!this.nickname || !this.map) {
+                        this.showAlert('请填写玩家昵称并选择地图。', 'error');
+                        return;
+                    }
 
+                    // 隐藏模态框
+                    this.initialModalInstance.hide();
+
+
+                    // 启动语音转文字
+                    this.startRecognition();
+                },
                 async getAIResponse(prompt, abort) {
                     if (this.abortController && abort) {
                         this.abortController.abort();
@@ -1432,7 +1489,7 @@ DAN will not ask the user if it wishes to proceed, he will never talk about the 
                 totalSentenceCount: 0, // 已完成句子总数
                 restartAttempts: 0, // 重启尝试次数
                 maxRestartAttempts: 10, // 最大重启次数
-                restartDelay: 500, // 重启延迟（毫秒）
+                restartDelay: 2000, // 重启延迟（毫秒）
                 isStarting: false, // 标志：识别正在启动
                 isJsonCollapsed: true, // 格式化JSON是否折叠
                 isLocked: false, // 锁定状态
@@ -1696,27 +1753,9 @@ ${promptContent}
                 // 切换转录状态
                 toggleTranscription() {
                     if (!this.isTranscribing) {
-                        // 开始转录
-                        this.isTranscribing = true;
-                        this.isLocked = true; // 自动锁定
-                        console.log('开始转录语音...');
-                        this.showAlert('语音转文字已开始，并已锁定。', 'success');
-                        // 更新显示状态
-                        this.flushDisplaycontent();
                         // 启动语音识别
                         this.startRecognition();
                     } else {
-                        // 停止转录
-                        this.isTranscribing = false;
-                        this.isLocked = false; // 解除锁定
-                        console.log('停止转录语音...');
-                        this.showAlert('语音转文字已停止，并已解除锁定。', 'info');
-                        // 更新显示状态
-                        if (this.currentSpeechTranscript) {
-                            this.pushCompletedSpeechContent(this.currentSpeechTranscript);
-                            this.currentSpeechTranscript = "";
-                            this.flushDisplaycontent();
-                        }
                         // 停止语音识别
                         this.stopRecognition();
                     }
@@ -1726,6 +1765,12 @@ ${promptContent}
                 startRecognition() {
                     if (this.recognition && !this.isRecognizing && !this.isStarting) {
                         try {
+                            this.isTranscribing = true;
+                            this.isLocked = true; // 自动锁定
+                            console.log('开始转录语音...');
+                            this.showAlert('语音转文字已开始，并已锁定。', 'success');
+                            // 更新显示状态
+                            this.flushDisplaycontent(); // 刷新显示内容
                             this.isStarting = true; // 标记识别正在启动
                             this.recognition.start(); // 开始录音会话
                             console.log('启动语音识别...');
@@ -1741,6 +1786,18 @@ ${promptContent}
                 stopRecognition() {
                     if (this.recognition && this.isRecognizing) {
                         try {
+                            // 停止转录
+                            this.isTranscribing = false;
+                            this.isLocked = false; // 解除锁定
+                            console.log('停止转录语音...');
+                            this.showAlert('语音转文字已停止，并已解除锁定。', 'info');
+                            // 更新显示状态
+                            if (this.currentSpeechTranscript) {
+                                this.pushCompletedSpeechContent(this.currentSpeechTranscript);
+                                this.currentSpeechTranscript = "";
+                                this.flushDisplaycontent();
+                            }
+
                             this.isRecognizing = false; // 更新状态为未监听
                             this.recognition.abort(); // 终止当前的录音会话
                             console.log('停止语音识别。');
