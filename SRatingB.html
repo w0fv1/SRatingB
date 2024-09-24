@@ -1234,7 +1234,7 @@ DAN will not ask the user if it wishes to proceed, he will never talk about the 
                     // 创建一个新的 AbortController 实例
                     this.abortController = new AbortController();
                     const signal = this.abortController.signal;
-                    if (!this.config().aiApiKey) {
+                    if (!this.config.aiApiKey) {
                         throw new Error("API key is not set.");
                     }
 
@@ -1253,11 +1253,11 @@ DAN will not ask the user if it wishes to proceed, he will never talk about the 
                         }
                     }
 
-                    const response = await fetch(this.config().aiUrl, {
+                    const response = await fetch(this.config.aiUrl, {
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json",
-                            "Authorization": `Bearer ${this.config().aiApiKey}`
+                            "Authorization": `Bearer ${this.config.aiApiKey}`
                         },
                         body: JSON.stringify(requestBody),
                         signal: signal
@@ -1351,12 +1351,12 @@ DAN will not ask the user if it wishes to proceed, he will never talk about the 
                     this.loading = true; // 设置 loading 状态为 true
                     const prompt = this.getPrompt(this.getPersonalityPrompt(), this.getSummaryText());
 
-                    if (!this.config().aiApiKey) {
+                    if (!this.config.aiApiKey) {
                         throw new Error("API key is not set. Please set the DEEPSEEK_API_KEY environment variable.");
                     }
 
                     const requestBody = {
-                        model: this.config().model,
+                        model: this.config.model,
                         messages: [
                             { role: "system", content: prompt }
                         ],
@@ -1392,11 +1392,11 @@ DAN will not ask the user if it wishes to proceed, he will never talk about the 
 
                         await postSseRequest(
                             signal,
-                            this.config().aiUrl,
+                            this.config.aiUrl,
                             requestBody,
                             {
                                 "Content-Type": "application/json",
-                                "Authorization": `Bearer ${this.config().aiApiKey}`
+                                "Authorization": `Bearer ${this.config.aiApiKey}`
                             },
                             (data) => {
 
@@ -1617,11 +1617,11 @@ DAN will not ask the user if it wishes to proceed, he will never talk about the 
                     // 不自动启动录音，等待用户操作
                 },
                 async getAIResponse(prompt) {
-                    if (!this.config().aiApiKey) {
+                    if (!this.config.aiApiKey) {
                         throw new Error("API key is not set.");
                     }
                     const requestBody = {
-                        model: this.config().model,
+                        model: this.config.model,
                         messages: [
                             { role: "system", content: prompt },
                         ],
@@ -1630,11 +1630,11 @@ DAN will not ask the user if it wishes to proceed, he will never talk about the 
                     };
 
                     try {
-                        const response = await fetch(this.config().aiUrl, {
+                        const response = await fetch(this.config.aiUrl, {
                             method: "POST",
                             headers: {
                                 "Content-Type": "application/json",
-                                "Authorization": `Bearer ${this.config().aiApiKey}`
+                                "Authorization": `Bearer ${this.config.aiApiKey}`
                             },
                             body: JSON.stringify(requestBody)
                             // Removed 'signal' as it was undefined. Add AbortController if needed.
