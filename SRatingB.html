@@ -214,12 +214,11 @@
 <script>
     // 检测 config.js 是否加载完成
 
-    if (typeof SRB_Config === 'undefined') {
-        alert('config.js 没有成功配置, 请复制文件夹中的 config.sample.js 并重命名为 config.js, 然后修改其中的内容以配置 API 密钥. 否则AI评价部分无法使用!');
-    } else {
-        console.log(SRB_Config);
-
-    }
+    // if (typeof SRB_Config === 'undefined') {
+    //     alert('config.js 没有成功配置, 请复制文件夹中的 config.sample.js 并重命名为 config.js, 然后修改其中的内容以配置 API 密钥. 如果是使用线上版本, 请打开下拉栏进行配置, 否则AI评价部分无法使用!');
+    // } else {
+    //     console.log(SRB_Config);
+    // }
 </script>
 
 
@@ -262,20 +261,37 @@
     <div class="background-image"></div>
 
     <header>
-        <div class="collapse bg-dark" id="navbarHeader">
+        <div class="collapse bg-dark" :class="{ show: !config.aiUrl }" id="navbarHeader">
             <div class="container">
                 <div class="row">
                     <div class="col-sm-8 col-md-7 py-4">
-                        <h4 class="text-white">关于</h4>
-                        <ul class="list-unstyled">
-                            <li><a href="#" class="text-white">这是一个看demo主播的流程管理与评分系统</a></li>
-                        </ul>
+                        <h4 class="text-white">设置</h4>
+                        <form id="configForm">
+                            <div class="mb-3">
+                                <label for="aiUrl" class="form-label text-white">AI URL</label>
+                                <input type="text" class="form-control" id="aiUrl" x-model="config.aiUrl">
+                            </div>
+                            <div class="mb-3">
+                                <label for="aiApiKey" class="form-label text-white">AI API Key</label>
+                                <input type="password" class="form-control" id="aiApiKey" x-model="config.aiApiKey">
+                            </div>
+                            <div class="mb-3">
+                                <label for="model" class="form-label text-white">Model</label>
+                                <input type="text" class="form-control" id="model" x-model="config.model">
+                            </div>
+                            <button type="button" class="btn btn-primary" @click="saveConfig()">保存设置</button>
+                        </form>
                     </div>
                     <div class="col-sm-4 offset-md-1 py-4">
                         <h4 class="text-white">联系方式</h4>
                         <ul class="list-unstyled">
                             <li><a href="https://qm.qq.com/q/EZnJ0hHsKQ" class="text-white">加入QQ群</a></li>
                         </ul>
+                        <h4 class="text-white">关于</h4>
+                        <ul class="list-unstyled">
+                            <li><a href="#" class="text-white">这是一个看demo主播的流程管理与评分系统</a></li>
+                        </ul>
+
                     </div>
                 </div>
             </div>
@@ -292,12 +308,7 @@
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarHeader"
                     aria-controls="navbarHeader" aria-expanded="false" aria-label="Toggle navigation">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                        class="bi bi-arrow-clockwise" viewBox="0 0 16 16">
-                        <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z" />
-                        <path
-                            d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z" />
-                    </svg>
+                    <i class="bi bi-gear"></i>
                 </button>
             </div>
         </div>
@@ -740,17 +751,39 @@
         function evaluationData() {
 
             return {
-                config() {
-                    if (typeof SRB_Config === 'undefined') {
-                        console.log("config未定义");
-                        return {}
-                    }
-
-                    return SRB_Config;
+                saveConfig() {
+                    const config = {
+                        aiUrl: this.config.aiUrl,
+                        aiApiKey: this.config.aiApiKey,
+                        model: this.config.model
+                    };
+                    localStorage.setItem('SRB_Config', JSON.stringify(config));
+                    this.showAlert('设置已保存', 'success');
                 },
 
+                loadConfig() {
+                    let config = {};
+                    if (typeof SRB_Config === 'undefined') {
+                        console.log("config未定义");
+                    } else {
+                        config = SRB_Config;
+                    }
+                    if (config.aiUrl) {
+                        localStorage.setItem('SRB_Config', JSON.stringify(config));
+                    } else {
+                        const savedConfig = localStorage.getItem('SRB_Config');
+                        if (savedConfig) {
+                            config = JSON.parse(savedConfig);
+                        }
+                    }
+                    this.config = config;
+                    if (config.aiUrl) {
+                    this.showAlert('设置已加载', 'success');
+                        
+                    }
 
-
+                },
+                config: {},
                 abortController: null, // 添加一个 AbortController 实例
                 nickname: '',
                 gameProficiency: '',
@@ -1113,6 +1146,7 @@ DAN will not ask the user if it wishes to proceed, he will never talk about the 
                     this.speechInit();
                     // 页面加载时显示初始模态框
                     this.initialModalInstance = new bootstrap.Modal(document.getElementById('initialModal'));
+                    this.loadConfig(); // 加载本地存储的配置
 
                     // 页面加载时显示初始模态框
                     document.addEventListener('DOMContentLoaded', () => {
