@@ -115,6 +115,99 @@
             display: flex;
             align-items: center;
         }
+
+        /* 悬浮按钮栏样式 */
+        .speech-control-bar {
+            position: fixed;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 10px;
+            padding: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+
+        /* 按钮样式 */
+        .speech-control-bar .btn {
+            width: 40px;
+            height: 40px;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            padding: 0;
+        }
+
+        .btn-toggle-speech {
+            color: white;
+            border: none;
+        }
+
+        /* 根据状态调整颜色 */
+        .btn-toggle-speech.green {
+            background-color: green;
+        }
+
+        .btn-toggle-speech.yellow {
+            background-color: yellow;
+        }
+
+        .btn-toggle-speech.red {
+            background-color: red;
+        }
+
+        .btn-toggle-speech:hover {
+            filter: brightness(98%);
+        }
+
+        .btn-restart-speech {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+        }
+
+        .btn-restart-speech:hover {
+            background-color: #5a6268;
+        }
+
+        /* 总结按钮样式 */
+        .btn-summarize {
+            background-color: #198754;
+            /* 绿色按钮 */
+            color: white;
+            border: none;
+        }
+
+        .btn-summarize:hover {
+            filter: brightness(90%);
+        }
+
+        .btn-summarize:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* 旋转动画 */
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .spin {
+            animation: spin 1s linear infinite;
+        }
     </style>
 </head>
 
@@ -500,28 +593,49 @@
             <br><br><br>
             <br>
             <hr>
-            <div class="d-flex justify-content-center"></div>
-            <div style="max-width: 300px;">
-                <div class="col">
-                    <label :for="personalityName" class="form-label"><span></label>
-                    <select class="form-select" :aria-label="'选择AI人格'" :id="personalityName" x-model="personalityName">
-                        <template x-for="option in personalityPromptOptinos" :key="option.name">
-                            <option :value="option.name" x-text="option.name"></option>
-                        </template>
-                    </select>
+            <div class="d-flex justify-content-center">
+                <div style="max-width: 300px;">
+                    <div class="col">
+                        <label :for="personalityName" class="form-label"><span></label>
+                        <select class="form-select" :aria-label="'选择AI人格'" :id="personalityName"
+                            x-model="personalityName">
+                            <template x-for="option in personalityPromptOptinos" :key="option.name">
+                                <option :value="option.name" x-text="option.name"></option>
+                            </template>
+                        </select>
+                    </div>
+                    <hr>
+                    <!-- <button type="button" class="btn btn-primary w-100" id="evaluateButton"
+                        @click="evaluate()">AI评价</button> -->
+                    <button type="button" class="btn btn-primary w-100 mt-2" id="evaluateStreamButton"
+                        @click="evaluateStream()">流式AI评价</button>
+                    <!-- <button type="button" class="btn btn-secondary w-100 mt-2"
+                        @click="copyTextSummary">复制总结和AI评价文字</button> -->
+                    <button type="button" class="btn btn-secondary w-100 mt-2"
+                        @click="copyImageSummary">下载总结和AI评价图片</button>
+                    <button type="button" class="btn btn-danger w-100 mt-2" @click="resetPage">下一位</button>
                 </div>
-                <hr>
-                <button type="button" class="btn btn-primary w-100" id="evaluateButton"
-                    @click="evaluate()">AI评价</button>
-                <button type="button" class="btn btn-primary w-100 mt-2" id="evaluateStreamButton"
-                    @click="evaluateStream()">流式AI评价</button>
-                <button type="button" class="btn btn-secondary w-100 mt-2" @click="copyTextSummary">复制总结和AI评价文字</button>
-                <button type="button" class="btn btn-secondary w-100 mt-2"
-                    @click="copyImageSummary">下载总结和AI评价图片</button>
-                <button type="button" class="btn btn-danger w-100 mt-2" @click="resetPage">重置</button>
+            </div>
+
             </div>
             </div>
+            <!-- 悬浮按钮栏 -->
+            <div class="speech-control-bar">
+                <!-- 切换按钮 -->
+                <button type="button" class="btn btn-toggle-speech" :class="getStatusClass()"
+                    @click="toggleTranscription">
+                    <i :class="isTranscribing ? 'bi bi-stop-circle' : 'bi bi-mic' "></i>
+                </button>
+                <!-- 重启按钮 -->
+                <button type="button" class="btn btn-restart-speech" @click="restartRecognition">
+                    <i class="bi bi-arrow-clockwise"></i>
+                </button>
+                <!-- 总结按钮 -->
+                <button type="button" class="btn btn-summarize" @click="summarizeContent" :disabled="isSummarizing">
+                    <i :class="isSummarizing ? 'bi bi-arrow-repeat spin-icon' : 'bi bi-journal-text'"></i>
+                </button>
             </div>
+
         </section>
     </main>
     <script>
@@ -1566,7 +1680,19 @@ ${promptContent}
                         console.log('语音识别已结束，但未处于转录状态。');
                     }
                 },
+                getStatusClass() {
 
+                    if (this.isRecognizing && this.isTranscribing && this.isLocked) {
+                        return 'green'
+                    }
+                    if (!this.isRecognizing || !this.isTranscribing || !this.isLocked) {
+                        if (!this.isRecognizing && !this.isTranscribing && !this.isLocked) {
+                            return 'red'
+                        }
+                        return 'yellow'
+                    }
+                    return 'red';
+                },
                 // 切换转录状态
                 toggleTranscription() {
                     if (!this.isTranscribing) {
@@ -1624,7 +1750,17 @@ ${promptContent}
                         }
                     }
                 },
-
+                restartRecognition() {
+                    if (this.isRecognizing) {
+                        this.stopRecognition();
+                        this.showAlert('正在重启语音识别...', 'info');
+                        setTimeout(() => {
+                            this.startRecognition();
+                        }, 500); // 重启延迟，可根据需要调整
+                    } else {
+                        this.showAlert('语音识别未启动，无需重启。', 'info');
+                    }
+                },
                 // 更新显示内容
                 flushDisplaycontent() {
                     let content = "";
