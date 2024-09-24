@@ -7,6 +7,7 @@
     <title>SRatingB</title>
     <link href="./css/bootstrap.min.css" rel="stylesheet">
     <link href="./css/bootstrap-icons.min.css" rel="stylesheet">
+    <script src="./js/popper.min.js"></script>
 
     <script src="./js/bootstrap.min.js"></script>
     <script src="./js/alpine.min.js" defer></script>
@@ -266,6 +267,8 @@
                 <div class="row">
                     <div class="col-sm-8 col-md-7 py-4">
                         <h4 class="text-white">设置</h4>
+                        <span class="text-white">如果您想使用AI的能力, 需要设置以下内容</span>
+                        <hr>
                         <form id="configForm">
                             <div class="mb-3">
                                 <label for="aiUrl" class="form-label text-white">AI URL</label>
@@ -279,7 +282,9 @@
                                 <label for="model" class="form-label text-white">Model</label>
                                 <input type="text" class="form-control" id="model" x-model="config.model">
                             </div>
-                            <button type="button" class="btn btn-primary" @click="saveConfig()">保存设置</button>
+                            <button type="button" class="btn btn-primary" @click="saveConfig()"                                 
+                            data-bs-toggle="tooltip" data-bs-title="点击保存当前设置(不会覆盖config.js的内容)">
+                            保存设置</button>
                         </form>
                     </div>
                     <div class="col-sm-4 offset-md-1 py-4">
@@ -459,15 +464,19 @@
                     <ul class="nav nav-pills">
                         <li class="nav-item">
                             <a href="#" @click.prevent="activeTab = 'displayContent'"
-                                :class="{'active': activeTab === 'displayContent'}" class="nav-link">实时显示内容</a>
+                                :class="{'active': activeTab === 'displayContent'}" class="nav-link"
+                                data-bs-toggle="tooltip" data-bs-title="点击查看当前语音识别内容"
+                                >语音识别实时内容</a>
                         </li>
                         <li class="nav-item">
                             <a href="#" @click.prevent="activeTab = 'summaryContent'"
-                                :class="{'active': activeTab === 'summaryContent'}" class="nav-link">内容总结历史</a>
+                                :class="{'active': activeTab === 'summaryContent'}" class="nav-link"
+                                data-bs-toggle="tooltip" data-bs-title="点击查看AI对识别内容的总结"
+                                >内容总结历史</a>
                         </li>
                         <li class="nav-item">
                             <a href="#" @click.prevent="activeTab = 'jsonDebug'"
-                                :class="{'active': activeTab === 'jsonDebug'}" class="nav-link">格式化的JSON数据Debug</a>
+                                :class="{'active': activeTab === 'jsonDebug'}" class="nav-link">格式化的JSON数据(Debug)</a>
                         </li>
                     </ul>
 
@@ -481,7 +490,7 @@
                             class="status-icon"></i>
                         <button @click="toggleTranscription"
                             :class="isTranscribing ? 'btn btn-danger ms-3' : 'btn btn-success ms-3'"
-                            x-text="isTranscribing ? '停止转录' : '开始转录'">
+                            x-text="isTranscribing ? '停止语音识别' : '开始语音识别'">
                         </button>
                         <button @click="summarizeContent" :disabled="isSummarizing"
                             :class="isSummarizing? 'btn btn-success ms-3' : 'btn btn-secondary ms-3'"
@@ -666,19 +675,20 @@
 
             </div>
             </div>
+
             <!-- 悬浮按钮栏 -->
             <div class="speech-control-bar">
                 <!-- 切换按钮 -->
                 <button type="button" class="btn btn-toggle-speech" :class="getStatusClass()"
-                    @click="toggleTranscription">
+                    @click="toggleTranscription" data-bs-toggle="tooltip" data-bs-title="点击打开/关闭语音识别">
                     <i :class="isTranscribing ? 'bi bi-stop-circle' : 'bi bi-mic' "></i>
                 </button>
                 <!-- 重启按钮 -->
-                <button type="button" class="btn btn-restart-speech" @click="restartRecognition">
+                <button type="button" class="btn btn-restart-speech" @click="restartRecognition" data-bs-toggle="tooltip" data-bs-title="点击重新开始语音识别">
                     <i class="bi bi-arrow-clockwise"></i>
                 </button>
                 <!-- 总结按钮 -->
-                <button type="button" class="btn btn-summarize" @click="summarizeContent" :disabled="isSummarizing">
+                <button type="button" class="btn btn-summarize" @click="summarizeContent" :disabled="isSummarizing" data-bs-toggle="tooltip" data-bs-title="点击生成语音识别的AI总结和评价">
                     <i :class="isSummarizing ? 'bi bi-arrow-repeat spin-icon' : 'bi bi-journal-text'"></i>
                 </button>
             </div>
@@ -686,7 +696,12 @@
         </section>
     </main>
     <script>
-
+        document.addEventListener('DOMContentLoaded', function () {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+                new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
         function generateUuid() {
             var d = new Date().getTime();
             var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
@@ -778,8 +793,8 @@
                     }
                     this.config = config;
                     if (config.aiUrl) {
-                    this.showAlert('设置已加载', 'success');
-                        
+                        this.showAlert('设置已加载', 'success');
+
                     }
 
                 },
