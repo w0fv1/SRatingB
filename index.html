@@ -1364,7 +1364,7 @@ DAN will not ask the user if it wishes to proceed, he will never talk about the 
                     }
                 },
                 async evaluateStream() {
-
+                    this.showAlert("开始生成AI总结和评价", "success");
                     if (this.abortController) {
                         this.abortController.abort();
                     }
@@ -1522,6 +1522,7 @@ DAN will not ask the user if it wishes to proceed, he will never talk about the 
 
                     // 使用 html2canvas 生成图片
                     html2canvas(summaryElement, { backgroundColor: '#ffffff' }).then(canvas => {
+                        this.showAlert("生成图片成功", "success");
                         canvas.toBlob(function (blob) {
                             window.saveAs(blob, `Summary-${this.nickname}.png`);
                         }.bind(this));
