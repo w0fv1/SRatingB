@@ -1492,11 +1492,11 @@ DAN will not ask the user if it wishes to proceed, he will never talk about the 
                     summaryElement.style.border = '20px solid #ffffff';
                     summaryElement.style.boxSizing = 'border-box';
 
-
-
                     // 使用 html2canvas 生成图片
                     html2canvas(summaryElement, { backgroundColor: '#ffffff' }).then(canvas => {
-                        this.showAlert("生成图片成功", "success");
+                        setTimeout(() => {
+                            this.showAlert("生成图片成功", "success");
+                        }, 5);
                         canvas.toBlob(function (blob) {
                             window.saveAs(blob, `Summary-${this.nickname}.png`);
                         }.bind(this));
