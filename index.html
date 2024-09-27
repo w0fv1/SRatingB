@@ -206,7 +206,7 @@
             }
         }
 
-        .spin {
+        .spin-icon {
             animation: spin 1s linear infinite;
         }
     </style>
@@ -231,11 +231,12 @@
             <i class="bi bi-arrow-up"></i>
         </button>
 
-        <button class="btn btn-primary me-4" onclick=" window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })">
+        <button class="btn btn-primary me-4"
+            onclick=" window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })">
             <i class="bi bi-arrow-down"></i>
         </button>
     </div>
-    
+
 
     <!-- 初始玩家信息模态框 -->
     <div class="modal fade" id="initialModal" tabindex="-1" aria-labelledby="initialModalLabel" aria-hidden="true">
@@ -293,9 +294,9 @@
                                 <label for="model" class="form-label text-white">Model</label>
                                 <input type="text" class="form-control" id="model" x-model="config.model">
                             </div>
-                            <button type="button" class="btn btn-primary" @click="saveConfig()"                                 
-                            data-bs-toggle="tooltip" data-bs-title="点击保存当前设置(不会覆盖config.js的内容)">
-                            保存设置</button>
+                            <button type="button" class="btn btn-primary" @click="saveConfig()" data-bs-toggle="tooltip"
+                                data-bs-title="点击保存当前设置(不会覆盖config.js的内容)">
+                                保存设置</button>
                         </form>
                     </div>
                     <div class="col-sm-4 offset-md-1 py-4">
@@ -305,7 +306,8 @@
                         </ul>
                         <h4 class="text-white">关于</h4>
                         <ul class="list-unstyled">
-                            <li  class="text-white">这是一个CS2看demo主播的流程管理与评分系统,如果您想将本网站应用于商业,请<a href="https://wofbi1.cn">联系作者</a></li>
+                            <li class="text-white">这是一个CS2看demo主播的流程管理与评分系统,如果您想将本网站应用于商业,请<a
+                                    href="https://wofbi1.cn">联系作者</a></li>
                         </ul>
 
                     </div>
@@ -476,14 +478,12 @@
                         <li class="nav-item">
                             <a href="#" @click.prevent="activeTab = 'displayContent'"
                                 :class="{'active': activeTab === 'displayContent'}" class="nav-link"
-                                data-bs-toggle="tooltip" data-bs-title="点击查看当前语音识别内容"
-                                >语音识别实时内容</a>
+                                data-bs-toggle="tooltip" data-bs-title="点击查看当前语音识别内容">语音识别实时内容</a>
                         </li>
                         <li class="nav-item">
                             <a href="#" @click.prevent="activeTab = 'summaryContent'"
                                 :class="{'active': activeTab === 'summaryContent'}" class="nav-link"
-                                data-bs-toggle="tooltip" data-bs-title="点击查看AI对识别内容的总结"
-                                >内容总结历史</a>
+                                data-bs-toggle="tooltip" data-bs-title="点击查看AI对识别内容的总结">内容总结历史</a>
                         </li>
                         <li class="nav-item">
                             <a href="#" @click.prevent="activeTab = 'jsonDebug'"
@@ -709,7 +709,8 @@
     <footer class="bg-dark text-white text-center py-3">
         <div class="container">
             <p>&copy; 2024 SRatingB. 保留所有权利。</p>
-            <p>本项目采用 <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" class="text-white">Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License</a>。</p>
+            <p>本项目采用 <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" class="text-white">Creative Commons
+                    Attribution-NonCommercial-NoDerivatives 4.0 International License</a>。</p>
             <p>
                 <strong>许可证说明</strong><br>
                 - 非商业使用免费：您可以自由使用本项目进行非商业用途。<br>
