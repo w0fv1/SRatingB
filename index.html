@@ -70,52 +70,11 @@
 
         }
 
-        /* 新增 CSS 类用于多行显示 */
-        .multiline {
-            white-space: pre-wrap;
-            /* 保留换行符并允许自动换行 */
-        }
-
-        .indicator {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            margin-right: 10px;
-        }
-
-        .listening {
-            background-color: green;
-        }
-
-        .not-listening {
-            background-color: red;
-        }
-
-        .transcribing {
-            background-color: green;
-        }
-
-        .not-transcribing {
-            background-color: red;
-        }
-
-        .locking {
-            background-color: green;
-        }
-
-        .not-locking {
-            background-color: red;
-        }
-
         .status-icon {
             font-size: 24px;
             margin-right: 15px;
         }
 
-        .status-container {
-            display: flex;
-            align-items: center;
-        }
 
         /* 悬浮按钮栏样式 */
         .speech-control-bar {
@@ -529,7 +488,8 @@
             <div class="col p-2">
                 <div class="mt-1">
                     <label for="additionalComments" class="form-label">CT方(防守方)评价与建议</label>
-                    <textarea class="form-control" id="additionalComments" rows="4" x-model="ctComments"></textarea>
+                    <textarea class="form-control text-wrap" id="additionalComments" rows="4"
+                        x-model="ctComments"></textarea>
                 </div>
             </div>
             <hr>
@@ -537,7 +497,8 @@
             <div class="col p-2">
                 <div class="mt-1">
                     <label for="additionalComments" class="form-label">T方(进攻方)评价与建议</label>
-                    <textarea class="form-control" id="additionalComments" rows="4" x-model="tComments"></textarea>
+                    <textarea class="form-control td text-wrap" id="additionalComments" rows="4"
+                        x-model="tComments"></textarea>
                 </div>
             </div>
             <hr>
@@ -545,7 +506,7 @@
             <div class="col p-2">
                 <div class="mb-3">
                     <label for="additionalComments" class="form-label">其他评价与建议</label>
-                    <textarea class="form-control" id="additionalComments" rows="4"
+                    <textarea class="form-control text-wrap" id="additionalComments" rows="4"
                         x-model="additionalComments"></textarea>
                 </div>
                 <button type="button" class="btn btn-secondary"
@@ -619,15 +580,15 @@
                             </tr>
                             <tr>
                                 <td>CT方评价与建议</td>
-                                <td class="multiline" x-text="ctComments"></td>
+                                <td class="text-wrap" x-text="ctComments"></td>
                             </tr>
                             <tr>
                                 <td>T方评价与建议</td>
-                                <td class="multiline" x-text="tComments"></td>
+                                <td class="text-wrap" x-text="tComments"></td>
                             </tr>
                             <tr>
                                 <td>其他评价与建议</td>
-                                <td class="multiline" x-text="additionalComments"></td>
+                                <td class="text-wrap" x-text="additionalComments"></td>
                             </tr>
                         </tbody>
                     </table>
@@ -699,7 +660,8 @@
                     <i class="bi bi-arrow-clockwise"></i>
                 </button> -->
                 <!-- 总结按钮 -->
-                <button type="button" class="btn btn-summarize" @click="summarizeContent" :disabled="isSummarizing" data-bs-toggle="tooltip" data-bs-title="点击生成语音识别的AI总结和评价">
+                <button type="button" class="btn btn-summarize" @click="summarizeContent" :disabled="isSummarizing"
+                    data-bs-toggle="tooltip" data-bs-title="点击生成语音识别的AI总结和评价">
                     <i :class="isSummarizing ? 'bi bi-arrow-repeat spin-icon' : 'bi bi-journal-text'"></i>
                 </button>
             </div>
