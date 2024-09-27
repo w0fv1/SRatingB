@@ -226,6 +226,17 @@
 
 <body x-data="evaluationData()" x-init="init()">
 
+    <div class="position-fixed bottom-0 column end-0 p-3">
+        <button class="btn btn-primary" onclick="window.scrollTo({ top: 0, behavior: 'smooth' })">
+            <i class="bi bi-arrow-up"></i>
+        </button>
+
+        <button class="btn btn-primary me-4" onclick=" window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })">
+            <i class="bi bi-arrow-down"></i>
+        </button>
+    </div>
+    
+
     <!-- 初始玩家信息模态框 -->
     <div class="modal fade" id="initialModal" tabindex="-1" aria-labelledby="initialModalLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -684,9 +695,9 @@
                     <i :class="isTranscribing ? 'bi bi-stop-circle' : 'bi bi-mic' "></i>
                 </button>
                 <!-- 重启按钮 -->
-                <button type="button" class="btn btn-restart-speech" @click="restartRecognition" data-bs-toggle="tooltip" data-bs-title="点击重新开始语音识别">
+                <!-- <button type="button" class="btn btn-restart-speech" @click="restartRecognition" data-bs-toggle="tooltip" data-bs-title="点击重新开始语音识别">
                     <i class="bi bi-arrow-clockwise"></i>
-                </button>
+                </button> -->
                 <!-- 总结按钮 -->
                 <button type="button" class="btn btn-summarize" @click="summarizeContent" :disabled="isSummarizing" data-bs-toggle="tooltip" data-bs-title="点击生成语音识别的AI总结和评价">
                     <i :class="isSummarizing ? 'bi bi-arrow-repeat spin-icon' : 'bi bi-journal-text'"></i>
