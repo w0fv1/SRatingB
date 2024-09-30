@@ -473,13 +473,13 @@
                 <div class="card-body">
                     <!-- Tab 内容 -->
                     <div x-show="activeTab === 'displayContent'">
-                        <pre x-text="displayContent"></pre>
+                        <pre  class="text-break" style="white-space: pre-wrap;" x-text="displayContent"></pre>
                     </div>
                     <div x-show="activeTab === 'summaryContent'">
-                        <pre x-text="summaryContent"></pre>
+                        <pre  class="text-break" style="white-space: pre-wrap;" x-text="summaryContent"></pre>
                     </div>
                     <div x-show="activeTab === 'jsonDebug'">
-                        <pre x-text="formattedSpeechContent()"></pre>
+                        <pre  class="text-break" style="white-space: pre-wrap;" x-text="formattedSpeechContent()"></pre>
                     </div>
                 </div>
             </div>
@@ -584,15 +584,15 @@
                             </tr>
                             <tr>
                                 <td>CT方评价与建议</td>
-                                <td class="text-wrap" x-text="ctComments"></td>
+                                <td  class="text-break" style="white-space: pre-wrap;" x-text="ctComments"></td>
                             </tr>
                             <tr>
                                 <td>T方评价与建议</td>
-                                <td class="text-wrap" x-text="tComments"></td>
+                                <td  class="text-break" style="white-space: pre-wrap;" x-text="tComments"></td>
                             </tr>
                             <tr>
                                 <td>其他评价与建议</td>
-                                <td class="text-wrap" x-text="additionalComments"></td>
+                                <td  class="text-break" style="white-space: pre-wrap;" x-text="additionalComments"></td>
                             </tr>
                         </tbody>
                     </table>
