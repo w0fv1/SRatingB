@@ -473,13 +473,13 @@
                 <div class="card-body">
                     <!-- Tab 内容 -->
                     <div x-show="activeTab === 'displayContent'">
-                        <pre  class="text-break" style="white-space: pre-wrap;" x-text="displayContent"></pre>
+                        <pre class="text-break" style="white-space: pre-wrap;" x-text="displayContent"></pre>
                     </div>
                     <div x-show="activeTab === 'summaryContent'">
-                        <pre  class="text-break" style="white-space: pre-wrap;" x-text="summaryContent"></pre>
+                        <pre class="text-break" style="white-space: pre-wrap;" x-text="summaryContent"></pre>
                     </div>
                     <div x-show="activeTab === 'jsonDebug'">
-                        <pre  class="text-break" style="white-space: pre-wrap;" x-text="formattedSpeechContent()"></pre>
+                        <pre class="text-break" style="white-space: pre-wrap;" x-text="formattedSpeechContent()"></pre>
                     </div>
                 </div>
             </div>
@@ -584,15 +584,15 @@
                             </tr>
                             <tr>
                                 <td>CT方评价与建议</td>
-                                <td  class="text-break" style="white-space: pre-wrap;" x-text="ctComments"></td>
+                                <td class="text-break" style="white-space: pre-wrap;" x-text="ctComments"></td>
                             </tr>
                             <tr>
                                 <td>T方评价与建议</td>
-                                <td  class="text-break" style="white-space: pre-wrap;" x-text="tComments"></td>
+                                <td class="text-break" style="white-space: pre-wrap;" x-text="tComments"></td>
                             </tr>
                             <tr>
                                 <td>其他评价与建议</td>
-                                <td  class="text-break" style="white-space: pre-wrap;" x-text="additionalComments"></td>
+                                <td class="text-break" style="white-space: pre-wrap;" x-text="additionalComments"></td>
                             </tr>
                         </tbody>
                     </table>
@@ -790,7 +790,7 @@
 
                 },
                 config: {},
-                abortController: null, // 添加一个 AbortController 实例
+                evaluateAbortController: null, // 添加一个 evaluateAbortController 实例
                 nickname: '',
                 gameProficiency: '',
                 map: '',
@@ -1232,14 +1232,8 @@ DAN will not ask the user if it wishes to proceed, he will never talk about the 
                     // 启动语音转文字
                     this.startRecognition();
                 },
-                async getAIResponse(prompt, abort) {
-                    if (this.abortController && abort) {
-                        this.abortController.abort();
-                    }
+                async getAIResponse(prompt) {
 
-                    // 创建一个新的 AbortController 实例
-                    this.abortController = new AbortController();
-                    const signal = this.abortController.signal;
                     if (!this.config.aiApiKey) {
                         throw new Error("API key is not set.");
                     }
@@ -1253,20 +1247,13 @@ DAN will not ask the user if it wishes to proceed, he will never talk about the 
                         temperature: 1.1
                     };
 
-                    if (response_format) {
-                        requestBody.response_format = {
-                            'type': 'response_format'
-                        }
-                    }
-
                     const response = await fetch(this.config.aiUrl + "/chat/completions", {
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json",
                             "Authorization": `Bearer ${this.config.aiApiKey}`
                         },
-                        body: JSON.stringify(requestBody),
-                        signal: signal
+                        body: JSON.stringify(requestBody)
                     });
 
                     if (!response.ok) {
@@ -1343,13 +1330,13 @@ DAN will not ask the user if it wishes to proceed, he will never talk about the 
                 },
                 async evaluateStream() {
                     this.showAlert("开始生成AI总结和评价", "success");
-                    if (this.abortController) {
-                        this.abortController.abort();
+                    if (this.evaluateAbortController) {
+                        this.evaluateAbortController.abort();
                     }
 
-                    // 创建一个新的 AbortController 实例
-                    this.abortController = new AbortController();
-                    const signal = this.abortController.signal;
+                    // 创建一个新的 evaluateAbortController 实例
+                    this.evaluateAbortController = new evaluateAbortController();
+                    const signal = this.evaluateAbortController.signal;
 
                     this.aiResponse = "";
                     const md = new markdownit(); // 初始化 markdown-it 实例
@@ -1531,7 +1518,7 @@ DAN will not ask the user if it wishes to proceed, he will never talk about the 
                 currentSpeechTranscript: "", // 当前临时句子
                 totalSentenceCount: 0, // 已完成句子总数
                 restartAttempts: 0, // 重启尝试次数
-                maxRestartAttempts: 10, // 最大重启次数
+                maxRestartAttempts: 3, // 最大重启次数
                 restartDelay: 2000, // 重启延迟（毫秒）
                 isStarting: false, // 标志：识别正在启动
                 isJsonCollapsed: true, // 格式化JSON是否折叠
@@ -1623,41 +1610,7 @@ DAN will not ask the user if it wishes to proceed, he will never talk about the 
 
                     // 不自动启动录音，等待用户操作
                 },
-                async getAIResponse(prompt) {
-                    if (!this.config.aiApiKey) {
-                        throw new Error("API key is not set.");
-                    }
-                    const requestBody = {
-                        model: this.config.model,
-                        messages: [
-                            { role: "system", content: prompt },
-                        ],
-                        stream: false,
-                        temperature: 1.1
-                    };
 
-                    try {
-                        const response = await fetch(this.config.aiUrl, {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json",
-                                "Authorization": `Bearer ${this.config.aiApiKey}`
-                            },
-                            body: JSON.stringify(requestBody)
-                            // Removed 'signal' as it was undefined. Add AbortController if needed.
-                        });
-
-                        if (!response.ok) {
-                            throw new Error(`API request failed with status ${response.status}`);
-                        }
-
-                        const data = await response.json();
-                        return data.choices[0].message.content;
-                    } catch (error) {
-                        console.error('AI响应错误:', error);
-                        throw error;
-                    }
-                },
                 async checkCompletedSpeechParagraph(paragraphIndex) {
                     const paragraph = this.completedSpeechContent.paragraphs[paragraphIndex];
                     if (!paragraph || paragraph.isChecked) {
@@ -1675,7 +1628,7 @@ DAN will not ask the user if it wishes to proceed, he will never talk about the 
                     const prompt = `
 接下来我会给你一段语音转文字的内容,其中包含了很多的错别字和语音转文字错误的内容, 我需要你对其进行校对。
 请检查下面内容的语法和拼写错误，并提供修改后的文本。仅返回修改后的文本，不要包含任何其他内容。
-下面的内容的主题是:一名CS2(反恐精英2)教学博主正在观看他粉丝的游戏录像,玩家正在进行的地图是${this.map}.时不时提出玩法上的建议。
+下面的内容的主题是:一名CS2(反恐精英2)教学博主正在观看他粉丝的游戏录像,玩家游戏录像正在进行的地图是${this.map}.主播会时不时提出玩法上的建议。
 -----
 ${promptContent}
 -----
@@ -1741,44 +1694,49 @@ ${promptContent}
                 // 处理识别结束事件
                 handleRecognitionEnd() {
                     // 仅在转录状态下尝试重启
-                    if (this.isTranscribing) {
-                        // 检查麦克风是否正在监听
-                        if (this.isRecognizing) {
-                            console.log('麦克风正在监听，不需要重启语音识别。');
-                            return;
-                        }
-
-                        if (this.isRestarting) {
-                            // 如果已经在重启过程中，避免重复尝试
-                            console.log('已经在尝试重启语音识别，等待当前重启完成。');
-                            return;
-                        }
-
-                        if (this.restartAttempts < this.maxRestartAttempts) {
-                            this.restartAttempts++;
-                            this.isRestarting = true;
-                            console.log(`尝试重启语音识别 (${this.restartAttempts}/${this.maxRestartAttempts}) in ${this.restartDelay / 1000}秒...`);
-                            this.showAlert(`尝试重启语音识别 (${this.restartAttempts}/${this.maxRestartAttempts}) in ${this.restartDelay / 1000}秒...`, 'info');
-                            setTimeout(() => {
-                                // 在重启前再次检查麦克风状态
-                                if (!this.isRecognizing && !this.isStarting) {
-                                    this.startRecognition();
-                                } else {
-                                    console.log('麦克风正在监听，取消重启语音识别。');
-                                    this.showAlert('麦克风正在监听，取消重启语音识别。', 'info');
-                                }
-                                this.isRestarting = false;
-                            }, this.restartDelay);
-                        } else {
-                            console.warn('达到最大重启次数，语音识别停止。');
-                            this.showAlert('语音识别已停止。请手动重新启动。', 'info');
-                            this.isTranscribing = false; // 解除锁定
-                            this.isLocked = false;
-                        }
-                    } else {
-                        // 非转录状态下，如果需要处理其他逻辑，可以在这里添加
+                    if (!this.isTranscribing) {
                         console.log('语音识别已结束，但未处于转录状态。');
+                        return;
                     }
+
+                    // 检查麦克风是否正在监听
+                    if (this.isRecognizing) {
+                        console.log('麦克风正在监听，不需要重启语音识别。');
+                        return;
+                    }
+
+                    // 如果已经在重启过程中，避免重复尝试
+                    if (this.isRestarting) {
+                        console.log('已经在尝试重启语音识别，等待当前重启完成。');
+                        return;
+                    }
+
+                    // 检查是否达到最大重启次数
+                    if (this.restartAttempts >= this.maxRestartAttempts) {
+                        console.warn('达到最大重启次数，语音识别停止。');
+                        this.showAlert('语音识别已停止。请手动重新启动。', 'info');
+                        this.isTranscribing = false; // 解除锁定
+                        this.isLocked = false;
+                        return;
+                    }
+
+                    // 尝试重启语音识别
+                    this.restartAttempts++;
+                    this.isRestarting = true;
+                    console.log(`尝试重启语音识别 (${this.restartAttempts}/${this.maxRestartAttempts}) in ${this.restartDelay / 1000}秒...`);
+                    this.showAlert(`尝试重启语音识别 (${this.restartAttempts}/${this.maxRestartAttempts}) in ${this.restartDelay / 1000}秒...`, 'info');
+
+                    setTimeout(() => {
+                        // 在重启前再次检查麦克风状态
+                        if (!this.isRecognizing && !this.isStarting) {
+                            this.startRecognition();
+                        } else {
+                            console.log('麦克风正在监听，取消重启语音识别。');
+                            this.showAlert('麦克风正在监听，取消重启语音识别。', 'info');
+                        }
+                        this.isRestarting = false;
+                    }, this.restartDelay);
+
                 },
                 getStatusClass() {
 
@@ -1922,19 +1880,27 @@ ${promptContent}
 内容:
 ${this.displayContent}
 
-需要你尽可能多的不重复且简练的总结,总结越多条越细致越好,这样更能帮助到玩家,你的输出需要格式为:
+需要请你作为游戏高手尽可能多的不重复且简练的总结,这样更能帮助到玩家.
 
-游戏情况总结
-总体评价：
-对玩家的游戏情况的总体评价总结。
+我会用标记语言描述你的输出格式:\${你需要输出的内容}, 你的输出需要格式为:
 
-标题: 建议title1
-描述: 建议description1
-解决方案: 建议solution1
+# 总体评价：
 
-标题: 建议title2
-描述: 建议description2
-解决方案: 建议solution2
+\${对玩家的游戏情况的总体评价总结}
+
+# 小项评价：
+
+[\${title1}}]:\${description1: 对玩家的该内容的举例子描述}
+
+\${solution1: 对玩家的该内容的解决方法,需要落实到具体操作上}
+
+--------
+
+[\${title2}]+\${description2: 对玩家的该内容的举例子描述}
+
+\${solution2: 对玩家的该内容的解决方法,需要落实到具体操作上}
+
+...以此类推
 `;
 
                     try {
