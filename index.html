@@ -1335,7 +1335,7 @@ DAN will not ask the user if it wishes to proceed, he will never talk about the 
                     }
 
                     // 创建一个新的 evaluateAbortController 实例
-                    this.evaluateAbortController = new evaluateAbortController();
+                    this.evaluateAbortController = new AbortController();
                     const signal = this.evaluateAbortController.signal;
 
                     this.aiResponse = "";
