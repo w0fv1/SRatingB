@@ -687,6 +687,13 @@
         </div>
     </footer>
     <script>
+        window.addEventListener('beforeunload', function (e) {
+            // 现代浏览器不允许自定义的消息，但可以设置一个默认提示
+            e.preventDefault();  // 旧的浏览器可能需要这个，现代浏览器可省略
+            e.returnValue = '';  // 设置这个属性以触发提示框
+            console.log("页面即将刷新");
+        });
+
         document.addEventListener('DOMContentLoaded', function () {
             var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
             tooltipTriggerList.forEach(function (tooltipTriggerEl) {
