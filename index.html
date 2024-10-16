@@ -207,13 +207,27 @@
                 <div class="modal-body">
                     <form id="initialForm">
                         <div class="mb-3">
+
                             <label for="modalNickname" class="form-label">玩家的游戏昵称</label>
-                            <input type="text" class="form-control" id="modalNickname" x-model="nickname" required>
+                            <template x-if="preNicknames.length === 0">
+
+                                <input type="text" class="form-control" id="modalNickname" x-model="nickname" required>
+                            </template>
+                            <template x-if="preNicknames.length > 0">
+                                <select type="text" class="form-control" id="modalNickname" x-model="nickname" required>
+                                    <option value="" disabled selected>选择玩家昵称</option>
+                                    <template x-for="option in preNicknames" :key="option">
+                                        <option x-text="option"></option>
+                                    </template>
+
+                                </select>
+                            </template>
+
                         </div>
                         <div class="mb-3">
                             <label for="modalMap" class="form-label">选择游戏地图</label>
                             <select class="form-select" id="modalMap" x-model="map" required>
-                                <option value="" disabled selected>选择地图</option>
+                                <option :value="map" x-text="map" selected></option>
                                 <template x-for="option in mapOptions" :key="option.value">
                                     <option :value="option.value" x-text="option.value"></option>
                                 </template>
@@ -335,7 +349,7 @@
                 <div class="col">
                     <label :for="map" class="form-label"><span>选择游戏地图</label>
                     <select class="form-select" :aria-label="'选择地图'" :id="map" x-model="map">
-                        <option selected :value="'选择地图'" x-text="'选择地图'">
+                        <option :value="map" x-text="map">
                         </option>
                         <template x-for="option in mapOptions" :key="option.value">
                             <option :value="option.value" x-text="option.value"></option>
@@ -799,6 +813,7 @@
                 config: {},
                 evaluateAbortController: null, // 添加一个 evaluateAbortController 实例
                 nickname: '',
+                preNicknames: [],
                 gameProficiency: '',
                 map: '',
                 sugarLevel: '',
@@ -837,17 +852,17 @@
                     { value: '熟练老手, 继续沉淀.' },
                 ],
                 mapOptions: [
-                    { value: '炙热沙城2(Dust2)' },
-                    { value: '炼狱小镇(Inferno)' },
-                    { value: '荒漠迷城(Mirage)' },
-                    { value: '核子危机(Nuke)' },
-                    { value: '殒命大厦(Vertigo)' },
-                    { value: '死亡游乐园(Overpass)' },
-                    { value: '远古遗迹(Ancient)' },
-                    { value: '阿努比斯(Anubis)' },
-                    { value: '死城之谜(Cache)' },
-                    { value: '风情磨坊(Mills)' },
-                    { value: '假日锡拉(Thera)' },
+                    { id: "dust2", value: '炙热沙城2(Dust2)' },
+                    { id: "inferno", value: '炼狱小镇(Inferno)' },
+                    { id: "mirage", value: '荒漠迷城(Mirage)' },
+                    { id: "nuke", value: '核子危机(Nuke)' },
+                    { id: "vertigo", value: '殒命大厦(Vertigo)' },
+                    { id: "overpass", value: '死亡游乐园(Overpass)' },
+                    { id: "ancient", value: '远古遗迹(Ancient)' },
+                    { id: "anubis", value: '阿努比斯(Anubis)' },
+                    { id: "cache", value: '死城之谜(Cache)' },
+                    { id: "mills", value: '风情磨坊(Mills)' },
+                    { id: "thera", value: '假日锡拉(Thera)' },
                 ],
                 "categories": [
                     {
@@ -1160,6 +1175,30 @@ DAN will not ask the user if it wishes to proceed, he will never talk about the 
                     // 页面加载时显示初始模态框
                     this.initialModalInstance = new bootstrap.Modal(document.getElementById('initialModal'));
                     this.loadConfig(); // 加载本地存储的配置
+                    function getUrlParams() {
+                        const params = new URLSearchParams(window.location.search);
+                        return {
+                            players: params.get('players') ? params.get('players').split(',') : [],
+                            map: params.get('map') || ''
+                        };
+                    }
+                    const mapId = getUrlParams().map;
+                    console.log(getUrlParams());
+                    // for循环按id寻找map
+                    let map = "";
+                    for (let i = 0; i < this.mapOptions.length; i++) {
+                        if (this.mapOptions[i].id === mapId) {
+                            map = this.mapOptions[i].value;
+                            break;
+                        }
+                    }
+                    console.log(map);
+                    this.map = map;
+                    this.preNicknames = getUrlParams().players;
+                    // 建立一个2秒循环，每2秒检查一次是否所有玩家都选择了角色
+                    setInterval(() => {
+                        console.log(this.map);
+                    }, 2000);
 
                     // 页面加载时显示初始模态框
                     document.addEventListener('DOMContentLoaded', () => {
